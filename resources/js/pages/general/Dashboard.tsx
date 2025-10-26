@@ -410,7 +410,7 @@ const Dashboard: React.FC = () => {
                 </Button>
                 {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
                 <Button onClick={runDeployCommands}>
-                    Run Deploy Commands
+                    Optimize Routes
                 </Button>
                 )}
             </div>
