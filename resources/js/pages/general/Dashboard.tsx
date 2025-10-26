@@ -565,9 +565,11 @@ const Dashboard: React.FC = () => {
                         <h1 className="text-2xl font-bold">Support Requests</h1>
                     </div>
                     <div className="flex flex-3 flex-wrap justify-between items-end gap-3">
+                    {/* <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-start md:items-end gap-3 w-full"> */}
                         {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
                             <>
                             <div className="flex justify-center items-center gap-3">
+                            {/* <div className="flex flex-col md:flex-row justify-center items-start md:items-center gap-3 w-full"> */}
                                 <div>
                                     <Label>Filter by IT Staff</Label>
                                     <Select onValueChange={(val: string) => setFilterStaff(val)} defaultValue="all">
@@ -600,7 +602,7 @@ const Dashboard: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <Button onClick={exportToExcel} className="bg-blue-600 hover:bg-blue-700 text-white mt-5">
+                                    <Button onClick={exportToExcel} className="bg-blue-600 hover:bg-blue-700 text-white mt-0 md:mt-5">
                                         Monitoring Logsheet
                                     </Button>
                                 </div>
@@ -608,7 +610,6 @@ const Dashboard: React.FC = () => {
 
                             {/* Process Summary Report */}
                             <ProcessSummaryReport/>
-
                             </>
                         )}
                     </div>
