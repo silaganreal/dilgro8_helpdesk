@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified', 'role:admin,superadmin'])->group(function
 Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/system-controls', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
     Route::get('/deploy-commands', [SuperAdminController::class, 'deploy_commands'])->name('deploy.commands');
+    Route::get('/deploy-commands-local', [SuperAdminController::class, 'deploy_commands_local'])->name('deploy.commands.local');
 });
 
 require __DIR__.'/settings.php';

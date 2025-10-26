@@ -33,6 +33,36 @@ class SuperAdminController extends Controller
             shell_exec($cmd);
         }
 
-        return "✅ Deployment maintenance tasks executed successfully.";
+        return response()->json([
+            'status' => 'success',
+            'message' => '✅ Deployment maintenance tasks executed successfully.'
+        ]);
+    }
+
+    public function deploy_commands_local() {
+        // Optional: Protect using token
+        // if (request('token') !== env('DEPLOY_TOKEN')) {
+        //     abort(403, 'Unauthorized');
+        // }
+
+        // Run commands using PHP 8.3 binary
+        // $php = "/opt/alt/php83/usr/bin/php";
+
+        $commands = [
+            "php artisan route:clear",
+            "php artisan config:clear",
+            "php artisan cache:clear",
+            "php artisan optimize:clear",
+            "php artisan route:list",
+        ];
+
+        foreach ($commands as $cmd) {
+            shell_exec($cmd);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => '✅ Deployment maintenance tasks executed successfully.'
+        ]);
     }
 }

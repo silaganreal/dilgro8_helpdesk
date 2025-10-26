@@ -118,6 +118,23 @@ const Dashboard: React.FC = () => {
         return staffMatch && statusMatch;
     });
 
+    function runDeployCommands() {
+        const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+        const url = isLocalhost
+            ? "/deploy-commands-local"
+            : "/deploy-commands";
+
+        fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(() => {
+            alert("Deployment failed.");
+        });
+    }
+
     // Excel export (uses filteredLogs)
     const exportToExcel = async () => {
         const workbook = new ExcelJS.Workbook();
@@ -387,10 +404,15 @@ const Dashboard: React.FC = () => {
     return (
        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex m-4">
+            <div className="flex m-4 gap-2">
                 <Button asChild>
                     <Link href="/support-form">Contact Support</Link>
                 </Button>
+                {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
+                <Button onClick={runDeployCommands}>
+                    Run Deploy Commands
+                </Button>
+                )}
             </div>
 
             {/* Processing dialog (full-screen minimal) */}
