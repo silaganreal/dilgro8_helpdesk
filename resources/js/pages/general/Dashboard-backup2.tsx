@@ -108,6 +108,7 @@ const Dashboard: React.FC = () => {
     // Filters
     const [filterStaff, setFilterStaff] = useState<string>("all");
     const [filterStatus, setFilterStatus] = useState<string>("all");
+
     const isFiltered = filterStaff !== "all" || filterStatus !== "all";
 
     // filteredLogs uses local filtering; when filtered, pagination is intentionally hidden
@@ -116,13 +117,6 @@ const Dashboard: React.FC = () => {
         const statusMatch = filterStatus === "all" || log.status === filterStatus;
         return staffMatch && statusMatch;
     });
-
-    // Monitoring Logsheet Modal States
-    const [showLogsheetModal, setShowLogsheetModal] = useState(false);
-    const [logsheetStaff, setLogsheetStaff] = useState("all");
-    const [logsheetStatus, setLogsheetStatus] = useState("all");
-    const [dateFrom, setDateFrom] = useState("");
-    const [dateTo, setDateTo] = useState("");
 
     function runDeployCommands() {
         const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
@@ -296,26 +290,7 @@ const Dashboard: React.FC = () => {
         }
 
         // ===== Data Rows =====
-        const dataForExcel = logs.data.filter(log => {
-            const staffMatch = logsheetStaff === "all" || log.it_staff === logsheetStaff;
-            const statusMatch = logsheetStatus === "all" || log.status === logsheetStatus;
-
-            const created = new Date(log.created_at);
-
-            let dateMatch = true;
-            if (dateFrom) {
-                const from = new Date(dateFrom + "T00:00:00");
-                if (created < from) dateMatch = false;
-            }
-            if (dateTo) {
-                const to = new Date(dateTo + "T23:59:59");
-                if (created > to) dateMatch = false;
-            }
-
-            return staffMatch && statusMatch && dateMatch;
-        });
-
-        dataForExcel.forEach((log, idx) => {
+        logs.data.forEach((log, idx) => {
             const created = new Date(log.created_at);
 
             let processingTime = "-";
@@ -386,7 +361,7 @@ const Dashboard: React.FC = () => {
 
     // Polling for new/finished requests for admins
     useEffect(() => {
-        if (auth?.user?.role !== 'admin' && auth?.user?.role !== 'superadmin') return;
+        if (auth?.user?.role !== 'admin') return;
 
         const interval = setInterval(() => {
             fetch('/check-new-requests')
@@ -405,7 +380,7 @@ const Dashboard: React.FC = () => {
     }, [lastId]);
 
     useEffect(() => {
-        if (auth?.user?.role !== 'admin' && auth?.user?.role !== 'superadmin') return;
+        if (auth?.user?.role !== 'admin') return;
 
         const interval = setInterval(() => {
             fetch('/check-finished-requests')
@@ -434,7 +409,7 @@ const Dashboard: React.FC = () => {
                     <Link href="/support-form">Contact Support</Link>
                 </Button>
                 {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
-                <Button onClick={runDeployCommands} className="cursor-pointer">
+                <Button onClick={runDeployCommands}>
                     Optimize Routes
                 </Button>
                 )}
@@ -586,53 +561,48 @@ const Dashboard: React.FC = () => {
 
             <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                    <div className="flex flex-3 flex-wrap justify-start gap-10">
-                        <div className="flex items-end mb-1">
-                            <h1 className="text-2xl font-bold">Support Requests</h1>
-                        </div>
-
-                        <div className="flex flex-3 flex-wrap justify-start gap-2">
-                            <div>
-                                <Label>Filter by IT Staff</Label>
-                                <Select onValueChange={(val: string) => setFilterStaff(val)} defaultValue="all">
-                                    <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                        <SelectValue placeholder="All Staff" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="AJ">AJ</SelectItem>
-                                        <SelectItem value="Chok">Chok</SelectItem>
-                                        <SelectItem value="Kenot">Kenot</SelectItem>
-                                        <SelectItem value="Emman">Emman</SelectItem>
-                                        <SelectItem value="Real">Real</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <Label>Filter by Status</Label>
-                                <Select onValueChange={(val: string) => setFilterStatus(val)} defaultValue="all">
-                                    <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                        <SelectValue placeholder="All Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="finished">Finished</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                    <div className="flex flex-1">
+                        <h1 className="text-2xl font-bold">Support Requests</h1>
                     </div>
-                    <div className="flex flex-1 flex-wrap items-end gap-2 justify-end">
+                    <div className="flex flex-3 flex-wrap justify-between items-end gap-3">
+                    {/* <div className="flex flex-col md:flex-row flex-wrap md:justify-between items-start md:items-end gap-3 w-full"> */}
                         {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
                             <>
                             <div className="flex justify-center items-center gap-3">
+                            {/* <div className="flex flex-col md:flex-row justify-center items-start md:items-center gap-3 w-full"> */}
                                 <div>
-                                    <Button
-                                        onClick={() => setShowLogsheetModal(true)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white mt-0 md:mt-5 cursor-pointer"
-                                    >
+                                    <Label>Filter by IT Staff</Label>
+                                    <Select onValueChange={(val: string) => setFilterStaff(val)} defaultValue="all">
+                                        <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <SelectValue placeholder="All Staff" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All</SelectItem>
+                                            <SelectItem value="AJ">AJ</SelectItem>
+                                            <SelectItem value="Chok">Chok</SelectItem>
+                                            <SelectItem value="Kenot">Kenot</SelectItem>
+                                            <SelectItem value="Emman">Emman</SelectItem>
+                                            <SelectItem value="Real">Real</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Label>Filter by Status</Label>
+                                    <Select onValueChange={(val: string) => setFilterStatus(val)} defaultValue="all">
+                                        <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <SelectValue placeholder="All Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All</SelectItem>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="finished">Finished</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Button onClick={exportToExcel} className="bg-blue-600 hover:bg-blue-700 text-white mt-0 md:mt-5">
                                         Monitoring Logsheet
                                     </Button>
                                 </div>
@@ -734,85 +704,6 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
             </div>
-
-            {/* Monitoring Logsheet Modal */}
-            <Dialog open={showLogsheetModal} onOpenChange={setShowLogsheetModal}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Download Monitoring Logsheet</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 mt-2">
-
-                        {/* IT Staff Filter */}
-                        <div>
-                            <Label>Filter by IT Staff</Label>
-                            <Select onValueChange={setLogsheetStaff} defaultValue="all">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="All Staff" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="AJ">AJ</SelectItem>
-                                    <SelectItem value="Chok">Chok</SelectItem>
-                                    <SelectItem value="Kenot">Kenot</SelectItem>
-                                    <SelectItem value="Emman">Emman</SelectItem>
-                                    <SelectItem value="Real">Real</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Status Filter */}
-                        <div>
-                            <Label>Filter by Status</Label>
-                            <Select onValueChange={setLogsheetStatus} defaultValue="all">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="All Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="finished">Finished</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Date Range */}
-                        <div>
-                            <Label>Date From</Label>
-                            <input
-                                type="date"
-                                className="w-full border rounded px-3 py-2"
-                                value={dateFrom}
-                                onChange={e => setDateFrom(e.target.value)}
-                            />
-                        </div>
-
-                        <div>
-                            <Label>Date To</Label>
-                            <input
-                                type="date"
-                                className="w-full border rounded px-3 py-2"
-                                value={dateTo}
-                                onChange={e => setDateTo(e.target.value)}
-                            />
-                        </div>
-
-                    </div>
-
-                    <DialogFooter>
-                        <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => {
-                                setShowLogsheetModal(false);
-                                exportToExcel();
-                            }}
-                        >
-                            Download Logsheet
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
         </AppLayout>
     )

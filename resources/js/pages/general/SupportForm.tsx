@@ -314,7 +314,7 @@ const SupportForm = () => {
                                 </div>
                             </div>
 
-                            {auth?.user?.role === 'admin' && (
+                            {auth?.user?.role === 'superadmin' && (
                                 <>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="w-full flex flex-col gap-3">

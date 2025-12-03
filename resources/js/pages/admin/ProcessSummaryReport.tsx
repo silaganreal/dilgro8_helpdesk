@@ -7,6 +7,14 @@ import { Label } from "@/components/ui/label";
 import { usePage } from "@inertiajs/react";
 import { showNotification } from "@/utils/notif";
 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter
+} from "@/components/ui/dialog";
+
 type SummaryRow = {
   date: string; // "YYYY-MM-DD"
   count: number;
@@ -29,6 +37,7 @@ export default function ProcessSummaryReport() {
     const [fromDate, setFromDate] = useState<string>("");
     const [toDate, setToDate] = useState<string>("");
     const [loading, setLoading] = useState(false);
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
 
     const fetchSummary = async (from: string, to: string): Promise<SummaryRow[]> => {
         const params = new URLSearchParams({ from, to });
@@ -368,36 +377,61 @@ export default function ProcessSummaryReport() {
     };
 
     return (
-        <div className="flex justify-center items-center gap-3">
-        {/* <div className="flex flex-col md:flex-row justify-center items-start md:items-center mt-10 gap-3 w-full"> */}
-            <div className="flex gap-1 items-center">
-                <Label className="text-gray-700 dark:text-gray-300">From</Label>
-                <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="border p-2 rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                />
-            </div>
-
-            <div className="flex gap-1 items-center">
-                <Label className="text-gray-700 dark:text-gray-300">To</Label>
-                <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="border p-2 rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                />
-            </div>
-
-            <div className="">
-                <Button
-                    onClick={handleGenerate} disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                    {loading ? "Generating..." : "Summary Logsheet"}
-                </Button>
-            </div>
+        <>
+        <div className="">
+            <Button
+                onClick={() => setShowSummaryModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+                Summary Logsheet
+            </Button>
         </div>
+
+        <Dialog open={showSummaryModal} onOpenChange={setShowSummaryModal}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Generate Process Summary Logsheet</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    {/* From Date */}
+                    <div>
+                        <Label>From</Label>
+                        <input
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            className="w-full mt-1 p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        />
+                    </div>
+
+                    {/* To Date */}
+                    <div>
+                        <Label>To</Label>
+                        <input
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            className="w-full mt-1 p-2 border rounded bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button
+                        disabled={loading}
+                        onClick={async () => {
+                            await handleGenerate();
+                            setShowSummaryModal(false); // Close modal after export
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                        {loading ? "Generating..." : "Generate Summary"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+        </>
     );
+
 }
