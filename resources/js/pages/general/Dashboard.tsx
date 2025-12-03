@@ -633,7 +633,7 @@ const Dashboard: React.FC = () => {
                                         onClick={() => setShowLogsheetModal(true)}
                                         className="bg-blue-600 hover:bg-blue-700 text-white mt-0 md:mt-5 cursor-pointer"
                                     >
-                                        Monitoring Logsheet
+                                        Monitoring Logsheett
                                     </Button>
                                 </div>
                             </div>

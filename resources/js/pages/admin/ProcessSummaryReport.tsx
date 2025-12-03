@@ -383,7 +383,7 @@ export default function ProcessSummaryReport() {
                 onClick={() => setShowSummaryModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-                Summary Logsheet
+                Summary Logsheett
             </Button>
         </div>
 

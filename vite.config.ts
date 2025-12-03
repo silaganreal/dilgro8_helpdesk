@@ -31,6 +31,7 @@ export default defineConfig({
         target: 'esnext',
         outDir: 'public_html/build',
         // emptyOutDir: true
+        chunkSizeWarningLimit: 2000, // increases limit to 2MB
     },
     optimizeDeps: {
         esbuildOptions: {
