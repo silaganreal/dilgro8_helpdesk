@@ -21,6 +21,7 @@ import ExcelJS from "exceljs"
 import { saveAs } from "file-saver"
 import type { Border } from "exceljs";
 import ProcessSummaryReport from "../admin/ProcessSummaryReport";
+import AccomplishmentReport from "../admin/AccomplishmentReport";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -108,13 +109,20 @@ const Dashboard: React.FC = () => {
     // Filters
     const [filterStaff, setFilterStaff] = useState<string>("all");
     const [filterStatus, setFilterStatus] = useState<string>("all");
-    const isFiltered = filterStaff !== "all" || filterStatus !== "all";
+    const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+    const [filterDateTo, setFilterDateTo] = useState<string>("");
+    const isFiltered = filterStaff !== "all" || filterStatus !== "all" || filterDateFrom !== "" || filterDateTo !== "";
 
     // filteredLogs uses local filtering; when filtered, pagination is intentionally hidden
     const filteredLogs = logs.data.filter((log) => {
         const staffMatch = filterStaff === "all" || log.it_staff === filterStaff;
         const statusMatch = filterStatus === "all" || log.status === filterStatus;
-        return staffMatch && statusMatch;
+
+        const logDate = new Date(log.finished_date).getTime()
+        const dateFromMatch = !filterDateFrom || logDate >= new Date(filterDateFrom).setHours(0, 0, 0, 0)
+        const dateToMatch = !filterDateTo || logDate <= new Date(filterDateTo).setHours(23, 59, 59, 999)
+
+        return staffMatch && statusMatch && dateFromMatch && dateToMatch;
     });
 
     // Monitoring Logsheet Modal States
@@ -145,6 +153,7 @@ const Dashboard: React.FC = () => {
     const exportToExcel = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("TA Monitoring Logsheet");
+        // const worksheet2 = workbook.addWorksheet("Accomplishment Report");
 
         // Column widths (adjusted like PDF)
         worksheet.columns = [
@@ -280,18 +289,18 @@ const Dashboard: React.FC = () => {
 
         for (let r = 7; r <= 8; r++) {
             worksheet.getRow(r).eachCell((cell) => {
-            cell.font = { bold: true };
-            cell.alignment = {
-                horizontal: "center",
-                vertical: "middle",
-                wrapText: true,
-            };
-            cell.border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-            };
+                cell.font = { bold: true };
+                cell.alignment = {
+                    horizontal: "center",
+                    vertical: "middle",
+                    wrapText: true,
+                };
+                cell.border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                };
             });
         }
 
@@ -315,6 +324,7 @@ const Dashboard: React.FC = () => {
             return staffMatch && statusMatch && dateMatch;
         });
 
+        // Populate data rows
         dataForExcel.forEach((log, idx) => {
             const created = new Date(log.created_at);
 
@@ -378,6 +388,43 @@ const Dashboard: React.FC = () => {
                 wrapText: true,
             };
         });
+
+        // Column widths (adjust based on screenshot)
+        // worksheet2.columns = [
+        //     { width: 5 },   // NO.
+        //     { width: 50 },  // WORK/ACTIVITY
+        //     { width: 12 },  // REFERENCE CODE
+        //     { width: 12 },  // No. of Revisions/Quality of Output
+        //     { width: 10 },  // Rating (Effectiveness)
+        //     { width: 12 },  // Efficiency (No. of outputs)
+        //     { width: 12 },  // Target Completion Date
+        //     { width: 12 },  // Started
+        //     { width: 12 },  // Finished
+        //     { width: 12 },  // Result
+        //     { width: 10 },  // Rating (Timeliness)
+        //     { width: 20 },  // Remarks
+        // ];
+
+        // ===== Insert Logo =====
+        // const logo2 = await fetch("/dilg-logo.png")
+        // .then(res => res.blob())
+        // .then(blob =>
+        //     new Promise<ArrayBuffer>((resolve) => {
+        //         const reader = new FileReader();
+        //         reader.onload = () => resolve(reader.result as ArrayBuffer);
+        //         reader.readAsArrayBuffer(blob);
+        //     })
+        // );
+
+        // const imageId2 = workbook.addImage({
+        //     buffer: logo2,
+        //     extension: "png",
+        // });
+
+        // worksheet2.addImage(imageId2, {
+        //     tl: { col: 0, row: 0 },
+        //     ext: { width: 85, height: 85 },
+        // });
 
         // Save file
         const buffer = await workbook.xlsx.writeBuffer();
@@ -622,9 +669,28 @@ const Dashboard: React.FC = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            <div>
+                                <Label>Filter by Date (From - To)</Label>
+                                <div className="flex gap-1">
+                                    <input
+                                        type="date"
+                                        className="w-1/2 dark:bg-gray-800 dark:border-gray-600 dark:text-white border rounded px-2 py-[5px]"
+                                        value={filterDateFrom}
+                                        onChange={(e) => setFilterDateFrom(e.target.value)}
+                                    />
+                                    <input
+                                        type="date"
+                                        className="w-1/2 dark:bg-gray-800 dark:border-gray-600 dark:text-white border rounded px-2 py-[5px]"
+                                        value={filterDateTo}
+                                        onChange={(e) => setFilterDateTo(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex flex-1 flex-wrap items-end gap-2 justify-end">
+
+                    <div className="flex flex-2 flex-wrap items-end gap-2 justify-end">
                         {(auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin') && (
                             <>
                             <div className="flex justify-center items-center gap-3">
@@ -640,6 +706,9 @@ const Dashboard: React.FC = () => {
 
                             {/* Process Summary Report */}
                             <ProcessSummaryReport/>
+
+                            {/* Accomplishment Report */}
+                            {/* <AccomplishmentReport/> */}
                             </>
                         )}
                     </div>
@@ -748,7 +817,7 @@ const Dashboard: React.FC = () => {
                         <div>
                             <Label>Filter by IT Staff</Label>
                             <Select onValueChange={setLogsheetStaff} defaultValue="all">
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                                     <SelectValue placeholder="All Staff" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -766,7 +835,7 @@ const Dashboard: React.FC = () => {
                         <div>
                             <Label>Filter by Status</Label>
                             <Select onValueChange={setLogsheetStatus} defaultValue="all">
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                                     <SelectValue placeholder="All Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -782,7 +851,7 @@ const Dashboard: React.FC = () => {
                             <Label>Date From</Label>
                             <input
                                 type="date"
-                                className="w-full border rounded px-3 py-2"
+                                className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                 value={dateFrom}
                                 onChange={e => setDateFrom(e.target.value)}
                             />
@@ -792,7 +861,7 @@ const Dashboard: React.FC = () => {
                             <Label>Date To</Label>
                             <input
                                 type="date"
-                                className="w-full border rounded px-3 py-2"
+                                className="w-full border rounded px-3 py-2 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                 value={dateTo}
                                 onChange={e => setDateTo(e.target.value)}
                             />
