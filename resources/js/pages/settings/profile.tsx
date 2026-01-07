@@ -21,6 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type ProfileForm = {
     fname: string;
+    lname: string;
     email: string;
 };
 
@@ -29,6 +30,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
         fname: auth.user.fname,
+        lname: auth.user.lname,
         email: auth.user.email,
     });
 
@@ -50,7 +52,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="fname">Name</Label>
+                            <Label htmlFor="fname">First Name</Label>
 
                             <Input
                                 id="fname"
@@ -59,10 +61,26 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 onChange={(e) => setData('fname', e.target.value)}
                                 required
                                 autoComplete="name"
-                                placeholder="Full name"
+                                placeholder="First Name"
                             />
 
                             <InputError className="mt-2" message={errors.fname} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="lname">Last Name</Label>
+
+                            <Input
+                                id="lname"
+                                className="mt-1 block w-full"
+                                value={data.lname}
+                                onChange={(e) => setData('lname', e.target.value)}
+                                required
+                                autoComplete="name"
+                                placeholder="Last Name"
+                            />
+
+                            <InputError className="mt-2" message={errors.lname} />
                         </div>
 
                         <div className="grid gap-2">
