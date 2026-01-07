@@ -44,16 +44,16 @@ const SupportForm = () => {
     const [open2, setOpen2] = React.useState(false)
     const [calendarDate2, setCalendarDate2] = React.useState<Date | undefined>(undefined)
 
-    function getCurrentTimeString() {
-        const now = new Date()
-        return now.toTimeString().split(' ')[0] // "HH:mm:ss"
-    }
+    // function getCurrentTimeString() {
+    //     const now = new Date()
+    //     return now.toTimeString().split(' ')[0] // "HH:mm:ss"
+    // }
 
-    function getCurrentTimeString3() {
-        const now = new Date()
-        now.setHours(now.getHours() + 3) // add 3 hours
-        return now.toTimeString().split(' ')[0] // "HH:mm:ss"
-    }
+    // function getCurrentTimeString3() {
+    //     const now = new Date()
+    //     now.setHours(now.getHours() + 3) // add 3 hours
+    //     return now.toTimeString().split(' ')[0] // "HH:mm:ss"
+    // }
 
     const { data, setData, post, processing, errors, reset } = useForm<{
         request_type: string
@@ -92,10 +92,12 @@ const SupportForm = () => {
         document_posting: '',
         problem_description: '',
         agreed_date: '',
-        agreed_time: getCurrentTimeString3(),
+        // agreed_time: getCurrentTimeString3(),
+        agreed_time: '',
         uploaded_file: null,
         finished_date: '',
-        finished_time: auth?.user?.role === "admin" ? getCurrentTimeString() : "",
+        // finished_time: auth?.user?.role === "admin" ? getCurrentTimeString() : "",
+        finished_time: '',
         it_staff: '',
         status: auth?.user?.role === "admin" ? "finished" : "pending",
         remarks: auth?.user?.role === "admin" ? "Done" : ""
@@ -305,8 +307,7 @@ const SupportForm = () => {
                                     <Input
                                         type="time"
                                         id="agreed_time"
-                                        step="1"
-                                        defaultValue={data.agreed_time}
+                                        step="60"
                                         value={data.agreed_time}
                                         onChange={e => setData('agreed_time', e.target.value)}
                                         className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
@@ -349,8 +350,7 @@ const SupportForm = () => {
                                         <Input
                                             type="time"
                                             id="finished_time"
-                                            step="1"
-                                            defaultValue={data.finished_time}
+                                            step="60"
                                             value={data.finished_time}
                                             onChange={e => setData('finished_time', e.target.value)}
                                             className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
