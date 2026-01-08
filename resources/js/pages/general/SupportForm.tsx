@@ -11,7 +11,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { PageProps, type BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,7 +35,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 const SupportForm = () => {
-    const { auth } = usePage().props as any
+    // const { auth } = usePage().props as any
+    const { auth } = usePage<PageProps>().props
     const { request_type } = usePage<Props>().props
 
     const [open, setOpen] = React.useState(false)

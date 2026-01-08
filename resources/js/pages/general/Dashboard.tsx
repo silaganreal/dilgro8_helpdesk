@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/layouts/app-layout";
-import { BreadcrumbItem } from "@/types";
+import { BreadcrumbItem, PageProps } from "@/types";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
@@ -81,13 +81,14 @@ type Props = {
 const SURVEY_LINKS: Record<string, string> = {
     AJ: "https://ecsm.dilg.gov.ph/?survey=tsj0jhw0q",
     Chok: "https://ecsm.dilg.gov.ph/?survey=863vrwt84",
-    Kenot: "https://ecsm.dilg.gov.ph/?survey=863vrwt84",
+    Kenot: "https://ecsm.dilg.gov.ph/?survey=9m8h6cmvz",
     Emman: "https://ecsm.dilg.gov.ph/?survey=jo4vvug37",
     Real: "https://ecsm.dilg.gov.ph/?survey=6l9f0s149",
 };
 
 const Dashboard: React.FC = () => {
-    const { auth } = usePage().props as any
+    // const { auth } = usePage().props as any
+    const { auth } = usePage<PageProps>().props
     const [lastId, setLastId] = useState<number | null>(null)
     const [lastFinishedAt, setLastFinishedAt] = useState<string | null>(null)
 
