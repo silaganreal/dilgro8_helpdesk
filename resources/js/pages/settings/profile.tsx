@@ -20,18 +20,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type ProfileForm = {
-    fname: string;
-    lname: string;
-    email: string;
+    fname?: string;
+    lname?: string;
+    email?: string;
+    css_link?: string;
 };
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<Required<ProfileForm>>({
-        fname: auth.user.fname,
-        lname: auth.user.lname,
-        email: auth.user.email,
+        fname: auth.user.fname || '',
+        lname: auth.user.lname || '',
+        email: auth.user.email || '',
+        css_link: auth.user.css_link || '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -121,6 +123,21 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 )}
                             </div>
                         )}
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="css_link">CSS Link</Label>
+
+                            <Input
+                                id="css_link"
+                                className="mt-1 block w-full"
+                                value={data.css_link}
+                                onChange={(e) => setData('css_link', e.target.value)}
+                                autoComplete="css_link"
+                                placeholder="CSM Link"
+                            />
+
+                            <InputError className="mt-2" message={errors.css_link} />
+                        </div>
 
                         <div className="flex items-center gap-4">
                             <Button disabled={processing}>Save</Button>

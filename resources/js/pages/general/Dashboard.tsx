@@ -21,7 +21,7 @@ import ExcelJS from "exceljs"
 import { saveAs } from "file-saver"
 import type { Border } from "exceljs";
 import ProcessSummaryReport from "../admin/ProcessSummaryReport";
-import AccomplishmentReport from "../admin/AccomplishmentReport";
+// import AccomplishmentReport from "../admin/AccomplishmentReport";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -78,13 +78,20 @@ type Props = {
     logs: PaginatedLogs
 }
 
-const SURVEY_LINKS: Record<string, string> = {
-    AJ: "https://ecsm.dilg.gov.ph/?survey=tsj0jhw0q",
-    Chok: "https://ecsm.dilg.gov.ph/?survey=863vrwt84",
-    Kenot: "https://ecsm.dilg.gov.ph/?survey=9m8h6cmvz",
-    Emman: "https://ecsm.dilg.gov.ph/?survey=jo4vvug37",
-    Real: "https://ecsm.dilg.gov.ph/?survey=6l9f0s149",
-};
+interface SuperAdmin {
+    id: number;
+    fname: string;
+    lname: string;
+    css_link: string | null;
+}
+
+// const SURVEY_LINKS: Record<string, string> = {
+//     AJ: "https://ecsm.dilg.gov.ph/?survey=tsj0jhw0q",
+//     Chok: "https://ecsm.dilg.gov.ph/?survey=863vrwt84",
+//     Kenot: "https://ecsm.dilg.gov.ph/?survey=9m8h6cmvz",
+//     Emman: "https://ecsm.dilg.gov.ph/?survey=jo4vvug37",
+//     Real: "https://ecsm.dilg.gov.ph/?survey=6l9f0s149",
+// };
 
 const Dashboard: React.FC = () => {
     // const { auth } = usePage().props as any
@@ -98,14 +105,20 @@ const Dashboard: React.FC = () => {
     const currentPage = logs?.meta?.current_page ?? 1
     const perPage = logs?.meta?.per_page ?? 10
 
+    const { superadmins = [] } = usePage<{
+        superadmins?: SuperAdmin[];
+    }>().props;
+
     const [isProcessing, setIsProcessing] = useState(false)
 
     // Modal & form states
     const [showModal, setShowModal] = useState(false)
     const [selectedLog, setSelectedLog] = useState<number | null>(null)
-    const [itStaff, setItStaff] = useState('')
+    const [itStaff, setItStaff] = useState<string>('')
     const [remarks, setRemarks] = useState('')
     const [showThankYou, setShowThankYou] = useState(false);
+
+    const surveyLink = superadmins.find((u) => String(u.id) === itStaff)?.css_link ?? "#";
 
     // Filters
     const [filterStaff, setFilterStaff] = useState<string>("all");
@@ -491,6 +504,7 @@ const Dashboard: React.FC = () => {
             {/* Processing dialog (full-screen minimal) */}
             <Dialog open={isProcessing} onOpenChange={() => { /* read-only */ }}>
                 <DialogContent className="flex flex-col items-center justify-center gap-4 py-10">
+                    <DialogHeader><DialogTitle></DialogTitle></DialogHeader>
                     <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
@@ -515,7 +529,9 @@ const Dashboard: React.FC = () => {
                 <DialogContent className="sm:max-w-md">
                     {showThankYou ? (
                         <div className="text-center space-y-4 py-6">
-                            <h2 className="text-xl font-semibold">Thank you!</h2>
+                            <DialogHeader className="flex items-center justify-center text-xl font-semibold">
+                                <DialogTitle>Thank you!</DialogTitle>
+                            </DialogHeader>
                             <p>
                                 Thanks for completing the request. Please complete answering the
                                 <b> Client Satisfaction Measure System</b> as part of our report. We appreciate your feedback!
@@ -523,7 +539,7 @@ const Dashboard: React.FC = () => {
 
                             <div className="flex items-center justify-center gap-3">
                                 <a
-                                    href={SURVEY_LINKS[itStaff] ?? "#"}
+                                    href={surveyLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-block px-4 py-2 rounded-md border bg-blue-600 text-white"
@@ -552,16 +568,16 @@ const Dashboard: React.FC = () => {
                             <div className="space-y-4">
                                 <div>
                                     <Label htmlFor="it_staff">Select IT Staff</Label>
-                                    <Select onValueChange={(val: string) => setItStaff(val)} value={itStaff}>
+                                    <Select value={itStaff} onValueChange={setItStaff}>
                                         <SelectTrigger id="it_staff">
                                             <SelectValue placeholder="Select IT Staff" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="AJ">AJ</SelectItem>
-                                            <SelectItem value="Chok">Chok</SelectItem>
-                                            <SelectItem value="Kenot">Kenot</SelectItem>
-                                            <SelectItem value="Emman">Emman</SelectItem>
-                                            <SelectItem value="Real">Real</SelectItem>
+                                            {superadmins.map((user) => (
+                                                <SelectItem key={user.id} value={String(user.id)}>
+                                                    {user.fname} {user.lname}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'lname',
         'section_div_unit',
         'email',
+        'css_link',
         'password',
     ];
 

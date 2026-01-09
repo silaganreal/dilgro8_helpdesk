@@ -15,25 +15,7 @@ use Inertia\Response;
 class GeneralController extends Controller
 {
     public function dashboard(): Response {
-        // $logs = DB::table('tarf_logs')
-        //     ->leftJoin('type_of_requests', 'tarf_logs.request_type', '=', 'type_of_requests.id')
-        //     ->leftJoin('users', 'tarf_logs.section_div_unit', '=', 'users.id')
-        //     ->leftJoin('section_div_units', 'users.section_div_unit', '=', 'section_div_units.id')
-        //     ->select(
-        //         'tarf_logs.*',
-        //         'type_of_requests.request_type as request_type_name',
-        //         'users.fname',
-        //         'users.lname',
-        //         'section_div_units.section_div_unit as sec_div_unit'
-        //     )
-        //     ->orderByDesc('tarf_logs.created_at')
-        //     ->paginate(10);
-
-        // return Inertia::render('general/Dashboard', [
-        //     'logs' => $logs
-        // ]);
-
-        $user = Auth::user(); // get logged-in user
+        $user = Auth::user();
 
         $query = DB::table('tarf_logs')
             ->leftJoin('type_of_requests', 'tarf_logs.request_type', '=', 'type_of_requests.id')
