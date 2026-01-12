@@ -21,14 +21,17 @@ class GeneralController extends Controller
             ->leftJoin('type_of_requests', 'tarf_logs.request_type', '=', 'type_of_requests.id')
             ->leftJoin('users', 'tarf_logs.section_div_unit', '=', 'users.id')
             ->leftJoin('section_div_units', 'users.section_div_unit', '=', 'section_div_units.id')
+            ->leftJoin('users as it_staff', 'tarf_logs.it_staff', '=', 'it_staff.id')
             ->select(
                 'tarf_logs.*',
                 'type_of_requests.request_type as request_type_name',
                 'users.fname',
                 'users.lname',
-                'section_div_units.section_div_unit as sec_div_unit'
+                'section_div_units.section_div_unit as sec_div_unit',
+                'it_staff.fname as it_fname',
+                'it_staff.lname as it_lname'
             )
-            ->orderByDesc('tarf_logs.created_at');
+        ->orderByDesc('tarf_logs.created_at');
 
         // ✅ Add condition based on role
         if ($user->role === 'user') {
@@ -38,11 +41,66 @@ class GeneralController extends Controller
             // Admin sees all logs — no filter
         }
 
-        $logs = $query->paginate(10);
+        // 🔒 Role-based restriction (UNCHANGED)
+        if ($user->role === 'user') {
+            $query->where('tarf_logs.section_div_unit', $user->id);
+        }
+
+        // ✅ ADD THIS FILTERS (before paginate)
+        // 🔹 IT Staff filter
+        if (request()->filled('staff')) {
+            $query->where('tarf_logs.it_staff', request('staff'));
+        }
+
+        // 🔹 Status filter
+        if (request()->filled('status') && request('status') !== 'all') {
+            $query->where('tarf_logs.status', request('status'));
+        }
+
+        $logs = $query
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('general/Dashboard', [
             'logs' => $logs,
+            'filters' => request()->only(['staff', 'status']),
         ]);
+    }
+
+    public function export_tamls() {
+        $query = DB::table('tarf_logs')
+            ->leftJoin('type_of_requests', 'tarf_logs.request_type', '=', 'type_of_requests.id')
+            ->leftJoin('users', 'tarf_logs.section_div_unit', '=', 'users.id')
+            ->leftJoin('section_div_units', 'users.section_div_unit', '=', 'section_div_units.id')
+            ->leftJoin('users as it_staff', 'tarf_logs.it_staff', '=', 'it_staff.id')
+            ->select(
+                'tarf_logs.*',
+                'type_of_requests.request_type as request_type_name',
+                'users.fname',
+                'users.lname',
+                'section_div_units.section_div_unit as sec_div_unit',
+                'it_staff.fname as it_fname',
+                'it_staff.lname as it_lname'
+            )
+        ->orderByDesc('tarf_logs.created_at');
+
+        if (request('staff') !== 'all') {
+            $query->where('tarf_logs.it_staff', request('staff'));
+        }
+
+        if (request('status') !== 'all') {
+            $query->where('tarf_logs.status', request('status'));
+        }
+
+        if (request('date_from')) {
+            $query->whereDate('tarf_logs.created_at', '>=', request('date_from'));
+        }
+
+        if (request('date_to')) {
+            $query->whereDate('tarf_logs.created_at', '<=', request('date_to'));
+        }
+
+        return response()->json($query->get());
     }
 
     public function support_form(): Response {

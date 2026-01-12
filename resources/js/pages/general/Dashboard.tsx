@@ -55,6 +55,8 @@ type TarfLog = {
     lname: string
     sec_div_unit: string
     reference_no: string
+    it_fname: string | null
+    it_lname: string | null
 }
 
 type PaginatedLogs = {
@@ -75,7 +77,11 @@ type PaginatedLogs = {
 }
 
 type Props = {
-    logs: PaginatedLogs
+    logs: PaginatedLogs;
+    filters: {
+        staff?: string;
+        status?: string;
+    };
 }
 
 interface SuperAdmin {
@@ -85,21 +91,13 @@ interface SuperAdmin {
     css_link: string | null;
 }
 
-// const SURVEY_LINKS: Record<string, string> = {
-//     AJ: "https://ecsm.dilg.gov.ph/?survey=tsj0jhw0q",
-//     Chok: "https://ecsm.dilg.gov.ph/?survey=863vrwt84",
-//     Kenot: "https://ecsm.dilg.gov.ph/?survey=9m8h6cmvz",
-//     Emman: "https://ecsm.dilg.gov.ph/?survey=jo4vvug37",
-//     Real: "https://ecsm.dilg.gov.ph/?survey=6l9f0s149",
-// };
-
 const Dashboard: React.FC = () => {
     // const { auth } = usePage().props as any
     const { auth } = usePage<PageProps>().props
     const [lastId, setLastId] = useState<number | null>(null)
     const [lastFinishedAt, setLastFinishedAt] = useState<string | null>(null)
 
-    const { logs: initialLogs } = usePage<Props>().props
+    const { logs: initialLogs, filters } = usePage<Props>().props
     const [logs, setLogs] = useState<PaginatedLogs>(initialLogs)
 
     const currentPage = logs?.meta?.current_page ?? 1
@@ -121,8 +119,8 @@ const Dashboard: React.FC = () => {
     const surveyLink = superadmins.find((u) => String(u.id) === itStaff)?.css_link ?? "#";
 
     // Filters
-    const [filterStaff, setFilterStaff] = useState<string>("all");
-    const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [filterStaff, setFilterStaff] = useState<string>(filters.staff ?? "all");
+    const [filterStatus, setFilterStatus] = useState<string>(filters.status ?? "all");
     const [filterDateFrom, setFilterDateFrom] = useState<string>("");
     const [filterDateTo, setFilterDateTo] = useState<string>("");
     const isFiltered = filterStaff !== "all" || filterStatus !== "all" || filterDateFrom !== "" || filterDateTo !== "";
@@ -130,13 +128,13 @@ const Dashboard: React.FC = () => {
     // filteredLogs uses local filtering; when filtered, pagination is intentionally hidden
     const filteredLogs = logs.data.filter((log) => {
         const staffMatch = filterStaff === "all" || log.it_staff === filterStaff;
-        const statusMatch = filterStatus === "all" || log.status === filterStatus;
+        // const statusMatch = filterStatus === "all" || log.status === filterStatus;
 
         const logDate = new Date(log.finished_date).getTime()
         const dateFromMatch = !filterDateFrom || logDate >= new Date(filterDateFrom).setHours(0, 0, 0, 0)
         const dateToMatch = !filterDateTo || logDate <= new Date(filterDateTo).setHours(23, 59, 59, 999)
 
-        return staffMatch && statusMatch && dateFromMatch && dateToMatch;
+        return staffMatch && dateFromMatch && dateToMatch;
     });
 
     // Monitoring Logsheet Modal States
@@ -145,6 +143,24 @@ const Dashboard: React.FC = () => {
     const [logsheetStatus, setLogsheetStatus] = useState("all");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+
+    function applyFilters(newFilters: {
+        staff?: string;
+        status?: string;
+    }) {
+        router.get(
+            route("dashboard"),
+            {
+                staff: newFilters.staff !== "all" ? newFilters.staff : undefined,
+                status: newFilters.status !== "all" ? newFilters.status : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    }
 
     function runDeployCommands() {
         const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
@@ -319,27 +335,37 @@ const Dashboard: React.FC = () => {
         }
 
         // ===== Data Rows =====
-        const dataForExcel = logs.data.filter(log => {
-            const staffMatch = logsheetStaff === "all" || log.it_staff === logsheetStaff;
-            const statusMatch = logsheetStatus === "all" || log.status === logsheetStatus;
+        // const dataForExcel = logs.data.filter(log => {
+        //     const staffMatch = logsheetStaff === "all" || log.it_staff === logsheetStaff;
+        //     const statusMatch = logsheetStatus === "all" || log.status === logsheetStatus;
 
-            const created = new Date(log.created_at);
+        //     const created = new Date(log.created_at);
 
-            let dateMatch = true;
-            if (dateFrom) {
-                const from = new Date(dateFrom + "T00:00:00");
-                if (created < from) dateMatch = false;
-            }
-            if (dateTo) {
-                const to = new Date(dateTo + "T23:59:59");
-                if (created > to) dateMatch = false;
-            }
+        //     let dateMatch = true;
+        //     if (dateFrom) {
+        //         const from = new Date(dateFrom + "T00:00:00");
+        //         if (created < from) dateMatch = false;
+        //     }
+        //     if (dateTo) {
+        //         const to = new Date(dateTo + "T23:59:59");
+        //         if (created > to) dateMatch = false;
+        //     }
 
-            return staffMatch && statusMatch && dateMatch;
-        });
+        //     return staffMatch && statusMatch && dateMatch;
+        // });
+
+        const query = new URLSearchParams({
+            staff: logsheetStaff,
+            status: logsheetStatus,
+            date_from: dateFrom ?? "",
+            date_to: dateTo ?? "",
+        }).toString();
+
+        const response = await fetch(`/tarf-logs/export-tamls?${query}`);
+        const dataForExcel = await response.json();
 
         // Populate data rows
-        dataForExcel.forEach((log, idx) => {
+        dataForExcel.forEach((log: any, idx: any) => {
             const created = new Date(log.created_at);
 
             let processingTime = "-";
@@ -360,14 +386,14 @@ const Dashboard: React.FC = () => {
 
             const row = worksheet.addRow([
                 idx + 1,
-                `R8-${log.reference_no}`,
+                log.reference_no ?? "-",
                 created.toLocaleDateString(),
                 created.toLocaleTimeString(),
                 sender ?? "-",
                 "-",
                 log.sec_div_unit ?? "-",
                 log.problem_description ?? "-",
-                log.it_staff ?? "-",
+                log.it_fname ?? "-",
                 log.agreed_date ?? "-",
                 log.agreed_time ?? "-",
                 log.finished_date ?? "-",
@@ -403,43 +429,6 @@ const Dashboard: React.FC = () => {
             };
         });
 
-        // Column widths (adjust based on screenshot)
-        // worksheet2.columns = [
-        //     { width: 5 },   // NO.
-        //     { width: 50 },  // WORK/ACTIVITY
-        //     { width: 12 },  // REFERENCE CODE
-        //     { width: 12 },  // No. of Revisions/Quality of Output
-        //     { width: 10 },  // Rating (Effectiveness)
-        //     { width: 12 },  // Efficiency (No. of outputs)
-        //     { width: 12 },  // Target Completion Date
-        //     { width: 12 },  // Started
-        //     { width: 12 },  // Finished
-        //     { width: 12 },  // Result
-        //     { width: 10 },  // Rating (Timeliness)
-        //     { width: 20 },  // Remarks
-        // ];
-
-        // ===== Insert Logo =====
-        // const logo2 = await fetch("/dilg-logo.png")
-        // .then(res => res.blob())
-        // .then(blob =>
-        //     new Promise<ArrayBuffer>((resolve) => {
-        //         const reader = new FileReader();
-        //         reader.onload = () => resolve(reader.result as ArrayBuffer);
-        //         reader.readAsArrayBuffer(blob);
-        //     })
-        // );
-
-        // const imageId2 = workbook.addImage({
-        //     buffer: logo2,
-        //     extension: "png",
-        // });
-
-        // worksheet2.addImage(imageId2, {
-        //     tl: { col: 0, row: 0 },
-        //     ext: { width: 85, height: 85 },
-        // });
-
         // Save file
         const buffer = await workbook.xlsx.writeBuffer();
         saveAs(new Blob([buffer]), "RICTU_TA-Monitoring-Logsheet.xlsx");
@@ -460,7 +449,7 @@ const Dashboard: React.FC = () => {
                         router.reload({ only: ['logs'] });
                     }
                 }).catch(() => {});
-        }, 10000);
+        }, 5000);
 
         return () => clearInterval(interval);
     }, [lastId]);
@@ -478,7 +467,7 @@ const Dashboard: React.FC = () => {
                         router.reload({ only: ['logs'] })
                     }
                 }).catch(()=>{})
-        }, 10000)
+        }, 5000)
 
         return () => clearInterval(interval)
     }, [lastFinishedAt])
@@ -656,29 +645,52 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         <div className="flex flex-3 flex-wrap justify-start gap-2">
+                            {/* Filter by IT Staff */}
                             <div>
                                 <Label>Filter by IT Staff</Label>
-                                <Select onValueChange={(val: string) => setFilterStaff(val)} defaultValue="all">
-                                    <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                        <SelectValue placeholder="All Staff" />
+                                <Select
+                                    value={filterStaff}
+                                    onValueChange={(val) => {
+                                        setFilterStaff(val);
+                                        applyFilters({
+                                            staff: val,
+                                            status: filterStatus,
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                        <SelectValue placeholder="Filter by IT Staff" />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                         <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="AJ">AJ</SelectItem>
-                                        <SelectItem value="Chok">Chok</SelectItem>
-                                        <SelectItem value="Kenot">Kenot</SelectItem>
-                                        <SelectItem value="Emman">Emman</SelectItem>
-                                        <SelectItem value="Real">Real</SelectItem>
+
+                                        {superadmins.map((user) => (
+                                            <SelectItem key={user.id} value={String(user.id)}>
+                                                {user.fname} {user.lname}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
 
+                            {/* Filter by Status */}
                             <div>
                                 <Label>Filter by Status</Label>
-                                <Select onValueChange={(val: string) => setFilterStatus(val)} defaultValue="all">
-                                    <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                <Select
+                                    value={filterStatus}
+                                    onValueChange={(val: string) => {
+                                        setFilterStatus(val);
+                                        applyFilters({
+                                            staff: filterStaff,
+                                            status: val,
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger className="dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                                         <SelectValue placeholder="All Status" />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                         <SelectItem value="all">All</SelectItem>
                                         <SelectItem value="pending">Pending</SelectItem>
@@ -687,6 +699,7 @@ const Dashboard: React.FC = () => {
                                 </Select>
                             </div>
 
+                            {/* Filter by Date */}
                             <div>
                                 <Label>Filter by Date (From - To)</Label>
                                 <div className="flex gap-1">
@@ -769,7 +782,7 @@ const Dashboard: React.FC = () => {
                                         )}
                                     </td>
                                     <td className="p-3 border">{new Date(log.created_at).toLocaleString()}</td>
-                                    <td className="p-3 border">{log.it_staff || '-'}</td>
+                                    <td className="p-3 border">{log.it_fname || '-'}</td>
                                     <td className="p-3 border">{(log.finished_date ?? '-') +' '+ (log.finished_time ?? '-')}</td>
                                     <td className="p-3 border">{log.remarks ?? '-'}</td>
                                     <td className="p-3 border">
@@ -839,11 +852,12 @@ const Dashboard: React.FC = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="AJ">AJ</SelectItem>
-                                    <SelectItem value="Chok">Chok</SelectItem>
-                                    <SelectItem value="Kenot">Kenot</SelectItem>
-                                    <SelectItem value="Emman">Emman</SelectItem>
-                                    <SelectItem value="Real">Real</SelectItem>
+
+                                    {superadmins.map((user) => (
+                                        <SelectItem key={user.id} value={String(user.id)}>
+                                            {user.fname} {user.lname}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/support-form', [GeneralController::class, 'support_form'])->name('support.form');
     Route::post('/support-form/submit', [GeneralController::class, 'store'])->name('support-form.submit');
     Route::put('/tarf-logs/{id}/status', [GeneralController::class, 'updateTarfStatus']);
+    Route::get('/tarf-logs/export-tamls', [GeneralController::class, 'export_tamls']);
 });
 
 // Admin Routes
