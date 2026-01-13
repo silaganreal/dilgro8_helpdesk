@@ -17,6 +17,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Command,
+    CommandInput,
+    CommandEmpty,
+    CommandGroup,
+    CommandItem,
+} from "@/components/ui/command";
 
 type TypeOfRequest = {
     id: number
@@ -343,19 +350,37 @@ const SupportForm = () => {
                                 <>
                                 <div className="grid gap-3">
                                     <Label htmlFor="requested_by">Requested by</Label>
-                                    <Select onValueChange={(value) => setData('requested_by', value)}>
+                                    <Select
+                                        value={data.requested_by}
+                                        onValueChange={(value) => setData("requested_by", value)}
+                                    >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Name of Client" />
                                         </SelectTrigger>
+
                                         <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>Name of Client</SelectLabel>
-                                                {users.map((user) => (
-                                                    <SelectItem key={user.id} value={String(user.id)}>
-                                                        {user.fname} {user.lname} - <span className="text-muted-foreground text-xs">{user.sec_div_unit}</span>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectGroup>
+                                            <Command>
+                                                <CommandInput placeholder="Search client..." />
+
+                                                <CommandEmpty>No client found.</CommandEmpty>
+
+                                                <CommandGroup>
+                                                    {users.map((user) => (
+                                                        <CommandItem
+                                                            key={user.id}
+                                                            value={`${user.fname} ${user.lname}`}
+                                                            onSelect={() => setData("requested_by", String(user.id))}
+                                                        >
+                                                            <span>
+                                                                {user.fname} {user.lname}
+                                                            </span>
+                                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                                {user.sec_div_unit}
+                                                            </span>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </Command>
                                         </SelectContent>
                                     </Select>
                                 </div>
