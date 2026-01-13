@@ -24,6 +24,7 @@ import {
     CommandGroup,
     CommandItem,
 } from "@/components/ui/command";
+import { useEffect, useRef, useState } from "react"
 
 type TypeOfRequest = {
     id: number
@@ -69,6 +70,16 @@ const SupportForm = () => {
 
     const [open3, setOpen3] = React.useState(false)
     const [calendarDate3, setCalendarDate3] = React.useState<Date | undefined>(undefined)
+
+    const [search, setSearch] = useState("");
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [open4, setOpen4] = useState(false);
+
+    useEffect(() => {
+        if (open4 && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [open4]);
 
     const { users = [] } = usePage<{
         users?: User[];
@@ -353,34 +364,41 @@ const SupportForm = () => {
                                     <Select
                                         value={data.requested_by}
                                         onValueChange={(value) => setData("requested_by", value)}
+                                        onOpenChange={setOpen4}
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Name of Client" />
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            <Command>
-                                                <CommandInput placeholder="Search client..." />
+                                            <div className="p-2">
+                                            <Input
+                                                ref={inputRef} // <-- assign ref
+                                                placeholder="Search..."
+                                                value={search}
+                                                onChange={(e) => setSearch(e.target.value)}
+                                                className="w-full mb-2"
+                                                autoFocus // <-- optional for first open
+                                            />
+                                            </div>
 
-                                                <CommandEmpty>No client found.</CommandEmpty>
-
-                                                <CommandGroup>
-                                                    {users.map((user) => (
-                                                        <CommandItem
-                                                            key={user.id}
-                                                            value={`${user.fname} ${user.lname}`}
-                                                            onSelect={() => setData("requested_by", String(user.id))}
-                                                        >
-                                                            <span>
-                                                                {user.fname} {user.lname}
-                                                            </span>
-                                                            <span className="ml-2 text-xs text-muted-foreground">
-                                                                {user.sec_div_unit}
-                                                            </span>
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </Command>
+                                            <SelectGroup>
+                                            <SelectLabel>Name of Client</SelectLabel>
+                                            {users
+                                                .filter((user) =>
+                                                `${user.fname} ${user.lname}`
+                                                    .toLowerCase()
+                                                    .includes(search.toLowerCase())
+                                                )
+                                                .map((user) => (
+                                                <SelectItem key={user.id} value={String(user.id)}>
+                                                    {user.fname} {user.lname}{" "}
+                                                    <span className="text-xs text-muted-foreground">
+                                                    {user.sec_div_unit}
+                                                    </span>
+                                                </SelectItem>
+                                                ))}
+                                            </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
