@@ -133,14 +133,66 @@ class GeneralController extends Controller
             'it_staff' => 'nullable|string',
             'status' => 'nullable|string',
             'remarks' => 'nullable|string',
-            'reference_no' => 'nullable|string'
+            'reference_no' => 'nullable|string',
+            'request_date' => 'nullable|date',
+            'request_time' => 'nullable|string',
+            'requested_by' => 'nullable|string',
         ]);
 
         if ($request->hasFile('uploaded_file')) {
             $validated['uploaded_file'] = $request->file('uploaded_file')->store('uploads', 'public');
         }
 
-        $validated['section_div_unit'] = Auth::id();
+        if (!empty($validated['request_date']) && !empty($validated['request_time'])) {
+            $validated['created_at'] = Carbon::createFromFormat(
+                'Y-m-d H:i',
+                $validated['request_date'] . ' ' . $validated['request_time']
+            );
+        }
+
+        // dd($validated['request_date'], $validated['request_time'], $validated['created_at']);
+
+        if (auth()->user()->role === 'superadmin') {
+            // Superadmin: use requested_by
+            $validated['section_div_unit'] = $validated['requested_by'];
+        } else {
+            // Normal user: use own user ID
+            $validated['section_div_unit'] = auth()->id();
+        }
+
+        // Generate Reference Number
+        $now = Carbon::now();
+        $year = $now->year;
+        $month = $now->month;
+
+        $counter = DB::transaction(function () use ($year, $month) {
+            $row = DB::table('request_counters')
+                ->where('year', $year)
+                ->where('month', $month)
+                ->lockForUpdate()
+                ->first();
+
+            if ($row) {
+                $newCounter = $row->counter + 1;
+                DB::table('request_counters')
+                    ->where('id', $row->id)
+                    ->update(['counter' => $newCounter]);
+            } else {
+                $newCounter = 1;
+                DB::table('request_counters')->insert([
+                    'year' => $year,
+                    'month' => $month,
+                    'counter' => $newCounter
+                ]);
+            }
+
+            return $newCounter;
+        });
+
+        $formattedCounter = str_pad($counter, 4, '0', STR_PAD_LEFT);
+        $referenceNo = "R8-{$year}-{$month}-{$formattedCounter}";
+
+        $validated['reference_no'] = $referenceNo; // Make sure your tarf_logs table has this column
 
         // dd($validated);
         TarfLogs::create($validated);

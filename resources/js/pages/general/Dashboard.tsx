@@ -335,25 +335,6 @@ const Dashboard: React.FC = () => {
         }
 
         // ===== Data Rows =====
-        // const dataForExcel = logs.data.filter(log => {
-        //     const staffMatch = logsheetStaff === "all" || log.it_staff === logsheetStaff;
-        //     const statusMatch = logsheetStatus === "all" || log.status === logsheetStatus;
-
-        //     const created = new Date(log.created_at);
-
-        //     let dateMatch = true;
-        //     if (dateFrom) {
-        //         const from = new Date(dateFrom + "T00:00:00");
-        //         if (created < from) dateMatch = false;
-        //     }
-        //     if (dateTo) {
-        //         const to = new Date(dateTo + "T23:59:59");
-        //         if (created > to) dateMatch = false;
-        //     }
-
-        //     return staffMatch && statusMatch && dateMatch;
-        // });
-
         const query = new URLSearchParams({
             staff: logsheetStaff,
             status: logsheetStatus,
@@ -781,7 +762,7 @@ const Dashboard: React.FC = () => {
                                         '-'
                                         )}
                                     </td>
-                                    <td className="p-3 border">{new Date(log.created_at).toLocaleString()}</td>
+                                    <td className="p-3 border">{log.created_at || '-'}</td>
                                     <td className="p-3 border">{log.it_fname || '-'}</td>
                                     <td className="p-3 border">{(log.finished_date ?? '-') +' '+ (log.finished_time ?? '-')}</td>
                                     <td className="p-3 border">{log.remarks ?? '-'}</td>

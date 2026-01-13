@@ -33,6 +33,7 @@ class TarfLogs extends Model
         'it_staff',
         'status',
         'remarks',
-        'reference_no'
+        'reference_no',
+        'created_at'
     ];
 }

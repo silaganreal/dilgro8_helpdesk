@@ -23,8 +23,23 @@ type TypeOfRequest = {
     request_type: string
 }
 
+type User = {
+    id: number;
+    fname: string;
+    lname: string;
+    sec_div_unit: string;
+}
+
+interface SuperAdmin {
+    id: number;
+    fname: string;
+    lname: string;
+    css_link: string | null;
+}
+
 type Props = {
     request_type: TypeOfRequest[]
+    users: User[]
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,16 +60,16 @@ const SupportForm = () => {
     const [open2, setOpen2] = React.useState(false)
     const [calendarDate2, setCalendarDate2] = React.useState<Date | undefined>(undefined)
 
-    // function getCurrentTimeString() {
-    //     const now = new Date()
-    //     return now.toTimeString().split(' ')[0] // "HH:mm:ss"
-    // }
+    const [open3, setOpen3] = React.useState(false)
+    const [calendarDate3, setCalendarDate3] = React.useState<Date | undefined>(undefined)
 
-    // function getCurrentTimeString3() {
-    //     const now = new Date()
-    //     now.setHours(now.getHours() + 3) // add 3 hours
-    //     return now.toTimeString().split(' ')[0] // "HH:mm:ss"
-    // }
+    const { users = [] } = usePage<{
+        users?: User[];
+    }>().props;
+
+    const { superadmins = [] } = usePage<{
+        superadmins?: SuperAdmin[];
+    }>().props;
 
     const { data, setData, post, processing, errors, reset } = useForm<{
         request_type: string
@@ -78,6 +93,9 @@ const SupportForm = () => {
         it_staff: string
         status: string
         remarks: string
+        request_date: string
+        request_time: string
+        requested_by: string
     }>({
         request_type: '',
         equipment_concern: '',
@@ -93,15 +111,16 @@ const SupportForm = () => {
         document_posting: '',
         problem_description: '',
         agreed_date: '',
-        // agreed_time: getCurrentTimeString3(),
         agreed_time: '',
         uploaded_file: null,
         finished_date: '',
-        // finished_time: auth?.user?.role === "admin" ? getCurrentTimeString() : "",
         finished_time: '',
         it_staff: '',
-        status: auth?.user?.role === "admin" ? "finished" : "pending",
-        remarks: auth?.user?.role === "admin" ? "Done" : ""
+        status: auth?.user?.role === "superadmin" ? "finished" : "pending",
+        remarks: auth?.user?.role === "superadmin" ? "Done" : "",
+        request_date: '',
+        request_time: '',
+        requested_by: '',
     })
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -112,6 +131,8 @@ const SupportForm = () => {
             onSuccess: () => {
                 reset()
                 setCalendarDate(undefined)
+                setCalendarDate2(undefined)
+                setCalendarDate3(undefined)
             },
         })
     }
@@ -275,6 +296,7 @@ const SupportForm = () => {
                                 <Textarea id="problem_description" value={data.problem_description} onChange={e => setData('problem_description', e.target.value)} placeholder="Please describe your concern or problem encountered" />
                             </div>
 
+                            {auth?.user?.role !== 'superadmin' && (
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="w-full flex flex-col gap-3">
                                     <Label htmlFor="agreed_date">Agreed Date <span className="text-muted-foreground text-xs">(If Applicable)</span></Label>
@@ -315,9 +337,76 @@ const SupportForm = () => {
                                     />
                                 </div>
                             </div>
+                            )}
 
                             {auth?.user?.role === 'superadmin' && (
                                 <>
+                                <div className="grid gap-3">
+                                    <Label htmlFor="requested_by">Requested by</Label>
+                                    <Select onValueChange={(value) => setData('requested_by', value)}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Name of Client" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>Name of Client</SelectLabel>
+                                                {users.map((user) => (
+                                                    <SelectItem key={user.id} value={String(user.id)}>
+                                                        {user.fname} {user.lname} - <span className="text-muted-foreground text-xs">{user.sec_div_unit}</span>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="w-full flex flex-col gap-3">
+                                        <Label htmlFor="request_date">Request Date</Label>
+                                        <Popover open={open3} onOpenChange={setOpen3}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    id="request_date"
+                                                    className="w-full justify-between font-normal"
+                                                    >
+                                                    {calendarDate3 ? calendarDate3.toLocaleDateString() : "Select date"}
+                                                    <ChevronDownIcon />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={calendarDate3}
+                                                    captionLayout="dropdown"
+                                                    onSelect={(date) => {
+                                                        if (!date) return
+
+                                                        const yyyy = date.getFullYear()
+                                                        const mm = String(date.getMonth() + 1).padStart(2, '0')
+                                                        const dd = String(date.getDate()).padStart(2, '0')
+
+                                                        setCalendarDate3(date)
+                                                        setData('request_date', `${yyyy}-${mm}-${dd}`)
+                                                        setOpen3(false)
+                                                    }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="w-full flex flex-col gap-3">
+                                        <Label htmlFor="request_time">Request Time</Label>
+                                        <Input
+                                            type="time"
+                                            id="request_time"
+                                            step="60"
+                                            value={data.request_time}
+                                            onChange={e => setData('request_time', e.target.value)}
+                                            className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="w-full flex flex-col gap-3">
                                         <Label htmlFor="finished_date">Date Finished</Label>
@@ -338,8 +427,14 @@ const SupportForm = () => {
                                                     selected={calendarDate2}
                                                     captionLayout="dropdown"
                                                     onSelect={(date) => {
+                                                        if (!date) return
+
+                                                        const yyyy = date.getFullYear()
+                                                        const mm = String(date.getMonth() + 1).padStart(2, '0')
+                                                        const dd = String(date.getDate()).padStart(2, '0')
+
                                                         setCalendarDate2(date)
-                                                        setData('finished_date', date?.toISOString().split('T')[0] || '')
+                                                        setData('finished_date', `${yyyy}-${mm}-${dd}`)
                                                         setOpen2(false)
                                                     }}
                                                 />
@@ -368,11 +463,11 @@ const SupportForm = () => {
                                         <SelectContent>
                                             <SelectGroup>
                                                 <SelectLabel>Assigned IT Staff</SelectLabel>
-                                                <SelectItem value="AJ">AJ</SelectItem>
-                                                <SelectItem value="Chok">Chok</SelectItem>
-                                                <SelectItem value="Kenot">Kenot</SelectItem>
-                                                <SelectItem value="Emman">Emman</SelectItem>
-                                                <SelectItem value="Real">Real</SelectItem>
+                                                {superadmins.map((user) => (
+                                                    <SelectItem key={user.id} value={String(user.id)}>
+                                                        {user.fname} {user.lname}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
