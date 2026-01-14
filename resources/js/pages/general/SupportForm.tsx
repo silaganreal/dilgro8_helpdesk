@@ -58,7 +58,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 const SupportForm = () => {
-    // const { auth } = usePage().props as any
     const { auth } = usePage<PageProps>().props
     const { request_type } = usePage<Props>().props
 
@@ -71,16 +70,7 @@ const SupportForm = () => {
     const [open3, setOpen3] = React.useState(false)
     const [calendarDate3, setCalendarDate3] = React.useState<Date | undefined>(undefined)
 
-    const [search, setSearch] = useState("");
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [open4, setOpen4] = useState(false);
-
-    useEffect(() => {
-        if (open4 && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [open4]);
-
+    // populate dropdown on contact form from app service provider
     const { users = [] } = usePage<{
         users?: User[];
     }>().props;
@@ -140,6 +130,13 @@ const SupportForm = () => {
         request_time: '',
         requested_by: '',
     })
+
+    // for dropdown with search on contact form for admin
+    const [openClient, setOpenClient] = useState(false);
+
+    const selectedClient = users.find(
+        (client) => String(client.id) === data.requested_by
+    );
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -361,46 +358,44 @@ const SupportForm = () => {
                                 <>
                                 <div className="grid gap-3">
                                     <Label htmlFor="requested_by">Requested by</Label>
-                                    <Select
-                                        value={data.requested_by}
-                                        onValueChange={(value) => setData("requested_by", value)}
-                                        onOpenChange={setOpen4}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Name of Client" />
-                                        </SelectTrigger>
+                                    <Popover open={openClient} onOpenChange={setOpenClient}>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                            {selectedClient
+                                                ? `${selectedClient.fname} ${selectedClient.lname}`
+                                                : "Select Name of Client"}
+                                            </Button>
+                                        </PopoverTrigger>
 
-                                        <SelectContent>
-                                            <div className="p-2">
-                                            <Input
-                                                ref={inputRef} // <-- assign ref
-                                                placeholder="Search..."
-                                                value={search}
-                                                onChange={(e) => setSearch(e.target.value)}
-                                                className="w-full mb-2"
-                                                autoFocus // <-- optional for first open
-                                            />
-                                            </div>
+                                        <PopoverContent className="w-full p-2">
+                                            <Command>
+                                                <CommandInput placeholder="Search client..." />
 
-                                            <SelectGroup>
-                                            <SelectLabel>Name of Client</SelectLabel>
-                                            {users
-                                                .filter((user) =>
-                                                `${user.fname} ${user.lname}`
-                                                    .toLowerCase()
-                                                    .includes(search.toLowerCase())
-                                                )
-                                                .map((user) => (
-                                                <SelectItem key={user.id} value={String(user.id)}>
-                                                    {user.fname} {user.lname}{" "}
-                                                    <span className="text-xs text-muted-foreground">
-                                                    {user.sec_div_unit}
-                                                    </span>
-                                                </SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
+                                                <CommandEmpty>No client found.</CommandEmpty>
+
+                                                <CommandGroup>
+                                                    {users.map((client) => (
+                                                    <CommandItem
+                                                        key={client.id}
+                                                        onSelect={() => {
+                                                            setData("requested_by", String(client.id));
+                                                            setOpenClient(false);
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center gap-1 w-full">
+                                                            <span>
+                                                                {client.fname} {client.lname}
+                                                            </span>{'-'}
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {client.sec_div_unit}
+                                                            </span>
+                                                        </div>
+                                                    </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">

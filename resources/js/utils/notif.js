@@ -13,7 +13,7 @@ export function showNotification(auth, title = "New Request", body = "A user sub
 
         let audio;
 
-        if (auth?.user?.fname === "Chok") {
+        if (auth?.user?.id === 4) {
             audio = new Audio('/yamete_kudasai.mp3');
         } else {
             audio = new Audio('/positive-notif.wav');
