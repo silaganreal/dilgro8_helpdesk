@@ -31,7 +31,7 @@ class GeneralController extends Controller
                 'it_staff.fname as it_fname',
                 'it_staff.lname as it_lname'
             )
-        ->orderByDesc('tarf_logs.created_at');
+        ->orderByDesc('tarf_logs.updated_at');
 
         // ✅ Add condition based on role
         if ($user->role === 'user') {
@@ -150,8 +150,6 @@ class GeneralController extends Controller
             );
         }
 
-        // dd($validated['request_date'], $validated['request_time'], $validated['created_at']);
-
         if (auth()->user()->role === 'superadmin') {
             // Superadmin: use requested_by
             $validated['section_div_unit'] = $validated['requested_by'];
@@ -192,7 +190,7 @@ class GeneralController extends Controller
         $formattedCounter = str_pad($counter, 4, '0', STR_PAD_LEFT);
         $referenceNo = "R8-{$year}-{$month}-{$formattedCounter}";
 
-        $validated['reference_no'] = $referenceNo; // Make sure your tarf_logs table has this column
+        $validated['reference_no'] = $referenceNo;
 
         // dd($validated);
         TarfLogs::create($validated);
