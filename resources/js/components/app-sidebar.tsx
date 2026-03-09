@@ -21,7 +21,8 @@ export function AppSidebar() {
         {
             title: 'Zoom Scheduler',
             href: '/zoom-scheduler',
-            icon: CalendarClock
+            icon: CalendarClock,
+            external: true,
         },
         {
             title: 'Attendance Viewer',
