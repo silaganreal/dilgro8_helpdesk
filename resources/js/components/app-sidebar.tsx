@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { PageProps, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Settings, Shield, ShieldAlert, Users } from 'lucide-react';
+import { CalendarCheck2, CalendarClock, LayoutGrid, Settings, Shield, ShieldAlert, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -17,6 +17,17 @@ export function AppSidebar() {
             title: 'Dashboard',
             href: '/dashboard',
             icon: LayoutGrid,
+        },
+        {
+            title: 'Zoom Scheduler',
+            href: '/zoom-scheduler',
+            icon: CalendarClock
+        },
+        {
+            title: 'Attendance Viewer',
+            href: 'http://26.93.45.191/login.php',
+            icon: CalendarCheck2,
+            external: true,
         },
     ];
 

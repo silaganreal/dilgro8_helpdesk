@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -253,5 +254,18 @@ class GeneralController extends Controller
         TarfLogs::where('id', $id)->update($updateData);
 
         return back()->with('success', 'Status updated successfully.');
+    }
+
+    public function zoomScheduler()
+    {
+        $token = Str::random(64);
+
+        DB::connection('zoomsched')->table('sso_tokens')->insert([
+            'user_id' => auth()->id(),
+            'token' => $token,
+            'expires_at' => now()->addMinutes(2)
+        ]);
+
+        return redirect("https://zoomsched.dilgrictu8.com/sso-login.php?token=$token");
     }
 }

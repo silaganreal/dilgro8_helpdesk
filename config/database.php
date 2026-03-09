@@ -63,6 +63,16 @@ return [
             ]) : [],
         ],
 
+        'zoomsched' => [
+            'driver' => 'mysql',
+            'host' => env('ZOOM_DB_HOST'),
+            'database' => env('ZOOM_DB_DATABASE'),
+            'username' => env('ZOOM_DB_USERNAME'),
+            'password' => env('ZOOM_DB_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

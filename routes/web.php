@@ -20,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/support-form/submit', [GeneralController::class, 'store'])->name('support-form.submit');
     Route::put('/tarf-logs/{id}/status', [GeneralController::class, 'updateTarfStatus']);
     Route::get('/tarf-logs/export-tamls', [GeneralController::class, 'export_tamls']);
+
+    Route::get('/zoom-scheduler', [GeneralController::class, 'zoomScheduler']);
 });
 
 // Admin Routes
