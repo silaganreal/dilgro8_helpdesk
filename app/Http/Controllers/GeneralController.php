@@ -261,7 +261,7 @@ class GeneralController extends Controller
         $token = Str::random(64);
 
         DB::connection('zoomsched')->table('sso_tokens')->insert([
-            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
             'token' => $token,
             'expires_at' => now()->addMinutes(2)
         ]);
