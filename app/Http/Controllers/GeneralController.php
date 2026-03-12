@@ -259,8 +259,10 @@ class GeneralController extends Controller
     public function zoomScheduler()
     {
         $token = Str::random(64);
+        $name = auth()->user()->fname . ' ' . auth()->user()->lname;
 
         DB::connection('zoomsched')->table('sso_tokens')->insert([
+            'name' => $name,
             'user_email' => auth()->user()->email,
             'token' => $token,
             'expires_at' => now()->addMinutes(2)
