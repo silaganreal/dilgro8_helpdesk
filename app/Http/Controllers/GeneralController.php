@@ -264,7 +264,7 @@ class GeneralController extends Controller
         DB::connection('zoomsched')->table('sso_tokens')->insert([
             'name' => $name,
             'user_email' => auth()->user()->email,
-            'password' => auth()->user()->password, // Store hashed password for security
+            'password' => auth()->user()->password,
             'token' => $token,
             'expires_at' => now()->addMinutes(2)
         ]);
