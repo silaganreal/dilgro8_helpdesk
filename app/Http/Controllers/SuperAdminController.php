@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TarfLogs;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -64,5 +65,14 @@ class SuperAdminController extends Controller
             'status' => 'success',
             'message' => '✅ Deployment maintenance tasks executed successfully.'
         ]);
+    }
+
+    public function update_log_status_receive($id) {
+        $log = TarfLogs::findOrFail($id);
+        $log->status = 'received';
+        $log->it_staff = auth()->user()->id;
+        $log->save();
+
+        return back();
     }
 }

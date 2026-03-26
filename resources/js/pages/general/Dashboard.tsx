@@ -21,6 +21,7 @@ import ExcelJS from "exceljs"
 import { saveAs } from "file-saver"
 import type { Border } from "exceljs";
 import ProcessSummaryReport from "../admin/ProcessSummaryReport";
+import { DialogDescription } from "@radix-ui/react-dialog";
 // import AccomplishmentReport from "../admin/AccomplishmentReport";
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -144,6 +145,7 @@ const Dashboard: React.FC = () => {
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
 
+
     function applyFilters(newFilters: {
         staff?: string;
         status?: string;
@@ -178,6 +180,17 @@ const Dashboard: React.FC = () => {
             alert("Deployment failed.");
         });
     }
+
+    const [timeStart, setTimeStart] = useState('');
+    const [timeEnd, setTimeEnd] = useState('');
+    const isInvalid = timeEnd && timeStart && timeEnd < timeStart;
+
+    const isFormValid =
+    itStaff &&
+    timeStart &&
+    timeEnd &&
+    remarks.trim() !== '' &&
+    !isInvalid;
 
     // Excel export (uses filteredLogs)
     const exportToExcel = async () => {
@@ -430,7 +443,7 @@ const Dashboard: React.FC = () => {
                         router.reload({ only: ['logs'] });
                     }
                 }).catch(() => {});
-        }, 5000);
+        }, 3000);
 
         return () => clearInterval(interval);
     }, [lastId]);
@@ -448,7 +461,7 @@ const Dashboard: React.FC = () => {
                         router.reload({ only: ['logs'] })
                     }
                 }).catch(()=>{})
-        }, 5000)
+        }, 3000)
 
         return () => clearInterval(interval)
     }, [lastFinishedAt])
@@ -474,12 +487,19 @@ const Dashboard: React.FC = () => {
             {/* Processing dialog (full-screen minimal) */}
             <Dialog open={isProcessing} onOpenChange={() => { /* read-only */ }}>
                 <DialogContent className="flex flex-col items-center justify-center gap-4 py-10">
-                    <DialogHeader><DialogTitle></DialogTitle></DialogHeader>
+                    <DialogHeader className="flex items-center justify-center">
+                        <DialogTitle>Processing</DialogTitle>
+                        <DialogDescription></DialogDescription>
+                    </DialogHeader>
+
                     <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                     </svg>
-                    <div className="text-sm text-muted-foreground">Processing your request...</div>
+
+                    <div className="text-sm text-muted-foreground">
+                        Please wait while your request is being processed...
+                    </div>
                 </DialogContent>
             </Dialog>
 
@@ -496,43 +516,53 @@ const Dashboard: React.FC = () => {
                     setShowModal(true);
                 }
             }}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent
+                    onInteractOutside={(e) => e.preventDefault()}
+                    onEscapeKeyDown={(e) => e.preventDefault()}
+                    className="sm:max-w-md !max-w-4xl w-full max-h-[90vh] overflow-auto p-8"
+                >
                     {showThankYou ? (
-                        <div className="text-center space-y-4 py-6">
+                        <div className="space-y-4 py-6">
                             <DialogHeader className="flex items-center justify-center text-xl font-semibold">
                                 <DialogTitle>Thank you!</DialogTitle>
                             </DialogHeader>
+
                             <p>
                                 Thanks for completing the request. Please complete answering the
                                 <b> Client Satisfaction Measure System</b> as part of our report. We appreciate your feedback!
                             </p>
 
-                            <div className="flex items-center justify-center gap-3">
+                            <p className="text-red-500 italic">
+                                **Please make sure to select <strong>N/A</strong> on the SQD5 part. Thank you!
+                            </p>
+
+                            <img
+                                src="/sqd5.png"
+                                alt="Thank You"
+                                className="mx-auto w-full h-32 object-contain"
+                            />
+
+                            <div className="flex items-center justify-center">
                                 <a
                                     href={surveyLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-block px-4 py-2 rounded-md border bg-blue-600 text-white"
-                                >
-                                    Go to CSMS Form
-                                </a>
-
-                                <Button
-                                    variant="outline"
                                     onClick={() => {
                                         setShowThankYou(false);
                                         setShowModal(false);
                                         setItStaff('');
                                     }}
                                 >
-                                    Close
-                                </Button>
+                                    Go to CSM Form
+                                </a>
                             </div>
                         </div>
                     ) : (
                         <>
-                            <DialogHeader>
+                            <DialogHeader className="flex items-center">
                                 <DialogTitle>Update Status</DialogTitle>
+                                <DialogDescription></DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-4">
@@ -552,6 +582,36 @@ const Dashboard: React.FC = () => {
                                     </Select>
                                 </div>
 
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="time_start">Time Start</Label>
+                                        <input
+                                            type="time"
+                                            id="time_start"
+                                            className="w-full border rounded-md p-2"
+                                            value={timeStart}
+                                            onChange={(e) => setTimeStart(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="time_end">Time End</Label>
+                                        <input
+                                            type="time"
+                                            id="time_end"
+                                            className="w-full border rounded-md p-2"
+                                            value={timeEnd}
+                                            onChange={(e) => setTimeEnd(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {isInvalid && (
+                                    <p className="text-red-500 text-sm">
+                                        End time cannot be earlier than start time
+                                    </p>
+                                )}
+
                                 <div>
                                     <Label htmlFor="remarks">Remarks</Label>
                                     <Textarea
@@ -565,21 +625,29 @@ const Dashboard: React.FC = () => {
 
                             <DialogFooter>
                                 <Button
-                                    disabled={isProcessing}
+                                    disabled={isProcessing || !isFormValid}
+                                    className={`${
+                                        isProcessing || !isFormValid
+                                            ? 'opacity-50 cursor-not-allowed'
+                                            : ''
+                                    }`}
                                     onClick={() => {
                                         if (!selectedLog) return;
-                                        // capture current id so closure won't be affected if state changes
+
                                         const currentId = selectedLog;
+
                                         setIsProcessing(true);
+
                                         router.put(`/tarf-logs/${currentId}/status`, {
                                             status: 'finished',
                                             it_staff: itStaff,
                                             remarks: remarks,
+                                            time_start: timeStart,
+                                            time_end: timeEnd,
                                         }, {
                                             onSuccess: () => {
                                                 setIsProcessing(false);
 
-                                                // update logs locally
                                                 setLogs((prev) => ({
                                                     ...prev,
                                                     data: prev.data.map((log) =>
@@ -588,6 +656,8 @@ const Dashboard: React.FC = () => {
                                                                 ...log,
                                                                 status: 'finished',
                                                                 remarks: remarks,
+                                                                time_start: timeStart,
+                                                                time_end: timeEnd,
                                                                 finished_date: new Date().toISOString().split("T")[0],
                                                                 finished_time: new Date().toLocaleTimeString()
                                                             }
@@ -595,12 +665,8 @@ const Dashboard: React.FC = () => {
                                                     )
                                                 }));
 
-                                                // ✅ keep IT staff so the link has a value
                                                 setShowThankYou(true);
-
                                                 setSelectedLog(null);
-                                                // ❌ DON'T CLEAR IT YET
-                                                // setItStaff('');
                                                 setRemarks('');
                                             },
                                             onError: () => {
@@ -737,8 +803,7 @@ const Dashboard: React.FC = () => {
                                 <th className="p-3 border">Request Date</th>
                                 <th className="p-3 border">IT Staff</th>
                                 <th className="p-3 border">Finished Date</th>
-                                <th className="p-3 border">Remarks</th>
-
+                                <th className="p-3 border">Remarks/Status</th>
                                 <th className="p-3 border">Action</th>
                             </tr>
                         </thead>
@@ -765,9 +830,75 @@ const Dashboard: React.FC = () => {
                                     <td className="p-3 border">{log.created_at || '-'}</td>
                                     <td className="p-3 border">{log.it_fname || '-'}</td>
                                     <td className="p-3 border">{(log.finished_date ?? '-') +' '+ (log.finished_time ?? '-')}</td>
-                                    <td className="p-3 border">{log.remarks ?? '-'}</td>
+                                    {/* <td className="p-3 border">{log.remarks ?? '-'}</td> */}
                                     <td className="p-3 border">
-                                        {log.status === 'pending' ? (
+                                        {auth?.user?.role === 'superadmin' ? (
+                                            (() => {
+                                                if (log.status === 'pending') {
+                                                    return (
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-orange-300 hover:bg-orange-400"
+                                                            onClick={() => {
+                                                                setIsProcessing(true);
+                                                                router.post(`/update-logs-status/${log.id}/receive`, {}, {
+                                                                    preserveScroll: true,
+                                                                    onFinish: () => {
+                                                                        setIsProcessing(false);
+                                                                    },
+                                                                });
+                                                            }}
+                                                        >
+                                                            Receive
+                                                        </Button>
+                                                    );
+                                                }
+                                                if (log.status === 'received') {
+                                                    return (
+                                                        <span className="text-blue-500 font-semibold">
+                                                            Received
+                                                        </span>
+                                                    );
+                                                }
+                                                if (log.status === 'finished') {
+                                                    return (
+                                                        <span>
+                                                            <span className="text-green-700 font-semibold">Finished - </span>
+                                                            <span>{log.remarks}</span>
+                                                        </span>
+                                                    );
+                                                }
+                                                return <span className="text-gray-500">Unknown</span>;
+                                            })()
+                                        ) : (
+                                            (() => {
+                                                if (log.status === 'pending') {
+                                                    return (
+                                                        <span className="text-orange-500 font-semibold">
+                                                            Pending
+                                                        </span>
+                                                    );
+                                                }
+                                                if (log.status === 'received') {
+                                                    return (
+                                                        <span className="text-blue-500 font-semibold">
+                                                            Received - {log.it_fname}
+                                                        </span>
+                                                    );
+                                                }
+                                                if (log.status === 'finished') {
+                                                    return (
+                                                        <span className="text-green-700 font-semibold">
+                                                            Finished - {log.it_fname}
+                                                        </span>
+                                                    );
+                                                }
+                                                return <span className="text-gray-500">Unknown</span>;
+                                            })()
+                                        )}
+                                    </td>
+                                    <td className="p-3 border">
+                                        {log.status !== 'finished' ? (
                                             <Button
                                                 size="sm"
                                                 className="bg-orange-300 hover:bg-orange-400"

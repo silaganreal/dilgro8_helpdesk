@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/system-controls', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
     Route::get('/deploy-commands', [SuperAdminController::class, 'deploy_commands'])->name('deploy.commands');
     Route::get('/deploy-commands-local', [SuperAdminController::class, 'deploy_commands_local'])->name('deploy.commands.local');
+    Route::post('/update-logs-status/{id}/receive', [SuperAdminController::class, 'update_log_status_receive']);
 });
 
 require __DIR__.'/settings.php';
