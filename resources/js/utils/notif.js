@@ -40,6 +40,7 @@
 
 // 1️⃣ Preload audio files
 const audioFiles = {
+    25: new Audio('/tmnt.mp3'),
     4: new Audio('/yamete_kudasai.mp3'), // special user
     default: new Audio('/positive-notif.wav'), // all others
 };
@@ -79,7 +80,8 @@ export async function showNotification(auth, title = "New Request", body = "A us
     });
 
     // Select audio based on user
-    const audio = auth?.user?.id === 4 ? audioFiles[4] : audioFiles.default;
+    // const audio = auth?.user?.id === 4 ? audioFiles[4] : audioFiles.default;
+    const audio = audioFiles[auth?.user?.id] || audioFiles.default;
 
     // Reset and play
     audio.currentTime = 0;

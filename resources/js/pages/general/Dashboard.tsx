@@ -22,7 +22,6 @@ import ExcelJS from "exceljs"
 import { saveAs } from "file-saver"
 import type { Border } from "exceljs";
 import ProcessSummaryReport from "../admin/ProcessSummaryReport";
-// import AccomplishmentReport from "../admin/AccomplishmentReport";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -206,6 +205,22 @@ const Dashboard: React.FC = () => {
     endDate &&
     endTime &&
     !isInvalid;
+
+    const fetchLogs = async () => {
+        try {
+            const res = await fetch('/dashboard', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await res.json();
+
+            setLogs(data);
+        } catch (err) {
+            console.error('Polling error:', err);
+        }
+    };
 
     // Excel export (uses filteredLogs)
     const exportToExcel = async () => {
@@ -496,6 +511,17 @@ const Dashboard: React.FC = () => {
         setLogs(initialLogs)
     }, [initialLogs])
 
+    useEffect(() => {
+        if (auth?.user?.role !== 'user') return;
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetchLogs();
+            }
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -697,7 +723,6 @@ const Dashboard: React.FC = () => {
                                         }, {
                                             onSuccess: () => {
                                                 setIsProcessing(false);
-
                                                 setLogs((prev) => ({
                                                     ...prev,
                                                     data: prev.data.map((log) =>
@@ -712,7 +737,6 @@ const Dashboard: React.FC = () => {
                                                             : log
                                                     )
                                                 }));
-
                                                 setShowThankYou(true);
                                                 setSelectedLog(null);
                                                 setRemarks('');

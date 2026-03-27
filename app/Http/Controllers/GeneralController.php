@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class GeneralController extends Controller
 {
-    public function dashboard(): Response {
+    public function dashboard(): Response|JsonResponse {
         $user = Auth::user();
 
         $query = DB::table('tarf_logs')
@@ -61,6 +62,10 @@ class GeneralController extends Controller
         $logs = $query
             ->paginate(10)
             ->withQueryString();
+
+        if (request()->wantsJson()) {
+            return response()->json($logs);
+        }
 
         return Inertia::render('general/Dashboard', [
             'logs' => $logs,
@@ -252,7 +257,9 @@ class GeneralController extends Controller
             $updateData['reference_no'] = $referenceNo;
         }
 
-        TarfLogs::where('id', $id)->update($updateData);
+        // Update the model and get the instance
+        $log = TarfLogs::findOrFail($id);
+        $log->update($updateData);
 
         return back()->with('success', 'Status updated successfully.');
     }
