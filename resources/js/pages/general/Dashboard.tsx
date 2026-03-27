@@ -9,7 +9,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog"
 
 import { Textarea } from "@/components/ui/textarea"
@@ -21,7 +22,6 @@ import ExcelJS from "exceljs"
 import { saveAs } from "file-saver"
 import type { Border } from "exceljs";
 import ProcessSummaryReport from "../admin/ProcessSummaryReport";
-import { DialogDescription } from "@radix-ui/react-dialog";
 // import AccomplishmentReport from "../admin/AccomplishmentReport";
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -49,8 +49,8 @@ type TarfLog = {
     status: string
     it_staff: string
     remarks: string
-    finished_date: string
-    finished_time: string
+    start_date_time: string
+    finish_date_time: string
     updated_at: string
     fname: string
     lname: string
@@ -129,9 +129,8 @@ const Dashboard: React.FC = () => {
     // filteredLogs uses local filtering; when filtered, pagination is intentionally hidden
     const filteredLogs = logs.data.filter((log) => {
         const staffMatch = filterStaff === "all" || log.it_staff === filterStaff;
-        // const statusMatch = filterStatus === "all" || log.status === filterStatus;
 
-        const logDate = new Date(log.finished_date).getTime()
+        const logDate = new Date(log.finish_date_time).getTime()
         const dateFromMatch = !filterDateFrom || logDate >= new Date(filterDateFrom).setHours(0, 0, 0, 0)
         const dateToMatch = !filterDateTo || logDate <= new Date(filterDateTo).setHours(23, 59, 59, 999)
 
@@ -181,15 +180,31 @@ const Dashboard: React.FC = () => {
         });
     }
 
-    const [timeStart, setTimeStart] = useState('');
-    const [timeEnd, setTimeEnd] = useState('');
-    const isInvalid = timeEnd && timeStart && timeEnd < timeStart;
+    const [startDate, setStartDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [endTime, setEndTime] = useState('');
+
+    const startDateTime =
+        startDate && startTime
+            ? `${startDate} ${startTime}`
+            : null;
+
+    const endDateTime =
+        endDate && endTime
+            ? `${endDate} ${endTime}`
+            : null;
+
+    const isInvalid =
+        startDateTime &&
+        endDateTime &&
+        endDateTime < startDateTime;
 
     const isFormValid =
-    itStaff &&
-    timeStart &&
-    timeEnd &&
-    remarks.trim() !== '' &&
+    startDate &&
+    startTime &&
+    endDate &&
+    endTime &&
     !isInvalid;
 
     // Excel export (uses filteredLogs)
@@ -360,11 +375,22 @@ const Dashboard: React.FC = () => {
 
         // Populate data rows
         dataForExcel.forEach((log: any, idx: any) => {
-            const created = new Date(log.created_at);
-
             let processingTime = "-";
-            if (log.finished_date && log.finished_time) {
-                const end = new Date(`${log.finished_date} ${log.finished_time}`);
+            const created = new Date(log.start_date_time);
+            const finish_date = log.finish_date_time
+                ? new Date(log.finish_date_time).toLocaleDateString('en-CA')
+                : "-";
+
+            const finish_time = log.finish_date_time
+                ? new Date(log.finish_date_time).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                })
+                : "-";
+
+            if (log.finish_date_time) {
+                const end = new Date(`${log.finish_date_time}`);
                 const diffMs = end.getTime() - created.getTime();
                 const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
                 const diffMins = Math.floor(
@@ -390,8 +416,8 @@ const Dashboard: React.FC = () => {
                 log.it_fname ?? "-",
                 log.agreed_date ?? "-",
                 log.agreed_time ?? "-",
-                log.finished_date ?? "-",
-                log.finished_time ?? "-",
+                finish_date ?? "-",
+                finish_time ?? "-",
                 processingTime,
                 "4",
                 ]);
@@ -584,24 +610,48 @@ const Dashboard: React.FC = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="time_start">Time Start</Label>
+                                        <Label htmlFor="start_date">Start Date</Label>
                                         <input
-                                            type="time"
-                                            id="time_start"
+                                            type="date"
+                                            id="start_date"
                                             className="w-full border rounded-md p-2"
-                                            value={timeStart}
-                                            onChange={(e) => setTimeStart(e.target.value)}
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
                                         />
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="time_end">Time End</Label>
+                                        <Label htmlFor="start_time">Start Time</Label>
                                         <input
                                             type="time"
-                                            id="time_end"
+                                            id="start_time"
                                             className="w-full border rounded-md p-2"
-                                            value={timeEnd}
-                                            onChange={(e) => setTimeEnd(e.target.value)}
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="end_date">End Date</Label>
+                                        <input
+                                            type="date"
+                                            id="end_date"
+                                            className="w-full border rounded-md p-2"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="end_time">End Time</Label>
+                                        <input
+                                            type="time"
+                                            id="end_time"
+                                            className="w-full border rounded-md p-2"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -642,8 +692,8 @@ const Dashboard: React.FC = () => {
                                             status: 'finished',
                                             it_staff: itStaff,
                                             remarks: remarks,
-                                            time_start: timeStart,
-                                            time_end: timeEnd,
+                                            date_time_start: startDateTime,
+                                            date_time_end: endDateTime,
                                         }, {
                                             onSuccess: () => {
                                                 setIsProcessing(false);
@@ -656,10 +706,8 @@ const Dashboard: React.FC = () => {
                                                                 ...log,
                                                                 status: 'finished',
                                                                 remarks: remarks,
-                                                                time_start: timeStart,
-                                                                time_end: timeEnd,
-                                                                finished_date: new Date().toISOString().split("T")[0],
-                                                                finished_time: new Date().toLocaleTimeString()
+                                                                date_time_start: startDateTime,
+                                                                date_time_end: endDateTime
                                                             }
                                                             : log
                                                     )
@@ -802,6 +850,7 @@ const Dashboard: React.FC = () => {
                                 <th className="p-3 border">Uploaded File</th>
                                 <th className="p-3 border">Request Date</th>
                                 <th className="p-3 border">IT Staff</th>
+                                <th className="p-3 border">Start Date</th>
                                 <th className="p-3 border">Finished Date</th>
                                 <th className="p-3 border">Remarks/Status</th>
                                 <th className="p-3 border">Action</th>
@@ -829,7 +878,8 @@ const Dashboard: React.FC = () => {
                                     </td>
                                     <td className="p-3 border">{log.created_at || '-'}</td>
                                     <td className="p-3 border">{log.it_fname || '-'}</td>
-                                    <td className="p-3 border">{(log.finished_date ?? '-') +' '+ (log.finished_time ?? '-')}</td>
+                                    <td className="p-3 border">{(log.start_date_time ?? '-')}</td>
+                                    <td className="p-3 border">{(log.finish_date_time ?? '-')}</td>
                                     {/* <td className="p-3 border">{log.remarks ?? '-'}</td> */}
                                     <td className="p-3 border">
                                         {auth?.user?.role === 'superadmin' ? (
@@ -862,10 +912,7 @@ const Dashboard: React.FC = () => {
                                                 }
                                                 if (log.status === 'finished') {
                                                     return (
-                                                        <span>
-                                                            <span className="text-green-700 font-semibold">Finished - </span>
-                                                            <span>{log.remarks}</span>
-                                                        </span>
+                                                        <span>{log.remarks}</span>
                                                     );
                                                 }
                                                 return <span className="text-gray-500">Unknown</span>;
@@ -888,9 +935,7 @@ const Dashboard: React.FC = () => {
                                                 }
                                                 if (log.status === 'finished') {
                                                     return (
-                                                        <span className="text-green-700 font-semibold">
-                                                            Finished - {log.it_fname}
-                                                        </span>
+                                                        <span>{log.remarks}</span>
                                                     );
                                                 }
                                                 return <span className="text-gray-500">Unknown</span>;
@@ -951,6 +996,7 @@ const Dashboard: React.FC = () => {
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Download Monitoring Logsheet</DialogTitle>
+                        <DialogDescription></DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 mt-2">

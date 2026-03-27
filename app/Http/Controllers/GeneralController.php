@@ -94,11 +94,11 @@ class GeneralController extends Controller
         }
 
         if (request('date_from')) {
-            $query->whereDate('tarf_logs.created_at', '>=', request('date_from'));
+            $query->where('tarf_logs.finish_date_time', '>=', request('date_from') . ' 00:00:00');
         }
 
         if (request('date_to')) {
-            $query->whereDate('tarf_logs.created_at', '<=', request('date_to'));
+            $query->where('tarf_logs.finish_date_time', '<=', request('date_to') . ' 23:59:59');
         }
 
         return response()->json($query->get());
@@ -129,8 +129,8 @@ class GeneralController extends Controller
             'problem_description' => 'nullable|string',
             'agreed_date' => 'nullable|date',
             'agreed_time' => 'nullable|string',
-            'finished_date' => 'nullable|string',
-            'finished_time' => 'nullable|string',
+            // 'finished_date' => 'nullable|string',
+            // 'finished_time' => 'nullable|string',
             'it_staff' => 'nullable|string',
             'status' => 'nullable|string',
             'remarks' => 'nullable|string',
@@ -203,19 +203,20 @@ class GeneralController extends Controller
             'status' => 'required|in:pending,finished',
             'it_staff' => 'required|string|max:255',
             'remarks' => 'nullable|string',
+            'date_time_start' => 'nullable|string',
+            'date_time_end' => 'nullable|string'
         ]);
 
        $updateData = [
             'status' => $request->status,
             'it_staff' => $request->it_staff,
             'remarks' => $request->remarks,
+            'start_date_time' => $request->date_time_start,
+            'finish_date_time' => $request->date_time_end
         ];
 
         if ($request->status === 'finished') {
             $now = Carbon::now();
-
-            $updateData['finished_date'] = Carbon::now()->toDateString(); // "YYYY-MM-DD"
-            $updateData['finished_time'] = Carbon::now()->format('H:i:s'); // "HH:MM:SS"
 
             // Generate Reference Number
             $year = $now->year;
@@ -248,7 +249,7 @@ class GeneralController extends Controller
             $formattedCounter = str_pad($counter, 4, '0', STR_PAD_LEFT);
             $referenceNo = "R8-{$year}-{$month}-{$formattedCounter}";
 
-            $updateData['reference_no'] = $referenceNo; // Make sure your tarf_logs table has this column
+            $updateData['reference_no'] = $referenceNo;
         }
 
         TarfLogs::where('id', $id)->update($updateData);
@@ -256,8 +257,7 @@ class GeneralController extends Controller
         return back()->with('success', 'Status updated successfully.');
     }
 
-    public function zoomScheduler()
-    {
+    public function zoomScheduler() {
         $token = Str::random(64);
         $name = auth()->user()->fname . ' ' . auth()->user()->lname;
 

@@ -12,7 +12,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter
+    DialogFooter,
+    DialogDescription
 } from "@/components/ui/dialog";
 
 type SummaryRow = {
@@ -44,8 +45,8 @@ export default function ProcessSummaryReport() {
         const url = `/reports/daily-summary?${params.toString()}`;
         const res = await fetch(url, { credentials: "same-origin" });
         if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Server error: ${res.status} ${txt}`);
+            const txt = await res.text();
+            throw new Error(`Server error: ${res.status} ${txt}`);
         }
         const json = (await res.json()) as SummaryRow[];
         return json;
@@ -391,6 +392,7 @@ export default function ProcessSummaryReport() {
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Generate Process Summary Logsheet</DialogTitle>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

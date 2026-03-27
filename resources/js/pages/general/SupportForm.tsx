@@ -96,8 +96,8 @@ const SupportForm = () => {
         agreed_date: string
         agreed_time: string
         uploaded_file: File | null
-        finished_date: string
-        finished_time: string
+        // finished_date: string
+        // finished_time: string
         it_staff: string
         status: string
         remarks: string
@@ -121,8 +121,8 @@ const SupportForm = () => {
         agreed_date: '',
         agreed_time: '',
         uploaded_file: null,
-        finished_date: '',
-        finished_time: '',
+        // finished_date: '',
+        // finished_time: '',
         it_staff: '',
         status: auth?.user?.role === "superadmin" ? "finished" : "pending",
         remarks: auth?.user?.role === "superadmin" ? "Done" : "",
