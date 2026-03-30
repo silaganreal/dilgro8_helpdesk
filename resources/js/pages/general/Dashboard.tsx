@@ -930,7 +930,7 @@ const Dashboard: React.FC = () => {
                                                 if (log.status === 'received') {
                                                     return (
                                                         <span className="text-blue-500 font-semibold">
-                                                            Received
+                                                            Received - {log.it_fname}
                                                         </span>
                                                     );
                                                 }
